@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -21,11 +22,12 @@ func main() {
 			"message": "pong",
 		})
 	})
-	r.GET("/queues/:queue_id", testqueue)
-	r.Run()
+	r.GET("/queues/:queue_id", getQueue)
+	r.POST("/queues/:queue_id", postQueue)
+	r.Run(":" + os.Getenv("APP_PORT"))
 }
 
-func testqueue(c *gin.Context) {
+func getQueue(c *gin.Context) {
 	ctx := context.Background()
 	queueId := c.Param("queue_id")
 
@@ -48,12 +50,14 @@ func testqueue(c *gin.Context) {
 	}
 
 	parent := os.Getenv("CLOUD_TASKS_PARENT")
+	path := "/queues/" + queueId
+	url := "http://localhost:" + os.Getenv("APP_PORT") + path
 	createTaskRequest := taskspb.CreateTaskRequest{
-		Parent: parent + "/queues/" + queueId,
+		Parent: parent + path,
 		Task: &taskspb.Task{
 			MessageType: &taskspb.Task_HttpRequest{
 				HttpRequest: &taskspb.HttpRequest{
-					Url: "https://yahoo.co.jp",
+					Url: url,
 				},
 			},
 		},
@@ -62,6 +66,7 @@ func testqueue(c *gin.Context) {
 	if err != nil {
 		log.Fatalf("client CreateTask: %v", err)
 	}
+	log.Printf("Created CloudTask %s\n", parent+path)
 
 	c.String(http.StatusOK, createdTask.String())
 }
@@ -83,4 +88,10 @@ func createQueue(
 	}
 
 	return createQueueResp, nil
+}
+
+func postQueue(c *gin.Context) {
+	msg := fmt.Sprintf("called queue: %s", c.Request.RequestURI)
+	log.Println(msg)
+	c.String(http.StatusOK, msg)
 }

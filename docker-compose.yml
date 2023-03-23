@@ -5,12 +5,14 @@ services:
       context: .
       dockerfile: ./Dockerfile
     ports:
-      - "${APP_PORT}:8080"
+      - "${APP_PORT}:${APP_PORT}"
     env_file:
       - .env
     volumes:
       - ./:/go/src
     tty: true
+    networks:
+      - backend
 
   gcloud-tasks-emulator:
     image: ghcr.io/aertje/cloud-tasks-emulator:latest
@@ -20,7 +22,8 @@ services:
       - "${TASKS_PORT:-8123}:8123"
     env_file:
       - .env
+    networks:
+      - backend
 
 networks:
-  backend:
-    external: false
+  backend: null
