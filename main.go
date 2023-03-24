@@ -51,7 +51,7 @@ func getQueue(c *gin.Context) {
 
 	parent := os.Getenv("CLOUD_TASKS_PARENT")
 	path := "/queues/" + queueId
-	url := "http://localhost:" + os.Getenv("APP_PORT") + path
+	url := "http://app:" + os.Getenv("APP_PORT") + path
 	createTaskRequest := taskspb.CreateTaskRequest{
 		Parent: parent + path,
 		Task: &taskspb.Task{
